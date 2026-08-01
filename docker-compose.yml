@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database for FoodShare API and Keycloak
+  db:
+    image: postgres:15
+    container_name: foodshare-db
+    environment:
+      POSTGRES_USER: foodshare
+      POSTGRES_PASSWORD: foodshare_password
+      POSTGRES_DB: foodshare_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U foodshare -d foodshare_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Keycloak for Identity and Access Management
+  keycloak:
+    image: quay.io/keycloak/keycloak:22.0.1
+    container_name: foodshare-keycloak
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://db:5432/foodshare_db
+      KC_DB_USERNAME: foodshare
+      KC_DB_PASSWORD: foodshare_password
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    command: start-dev --import-realm
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # RabbitMQ for Event-Driven Notifications
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: foodshare-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+    ports:
+      - "5672:5672"   # AMQP protocol port
+      - "15672:15672" # Management UI port
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+volumes:
+  postgres_data:
+  rabbitmq_data:

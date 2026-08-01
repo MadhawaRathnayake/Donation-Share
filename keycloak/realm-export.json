@@ -1,0 +1,63 @@
+{
+  "id": "foodshare",
+  "realm": "foodshare",
+  "displayName": "FoodShare Platform",
+  "enabled": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "Donor",
+        "description": "Food Donor Organization"
+      },
+      {
+        "name": "Recipient",
+        "description": "Recipient Organization"
+      },
+      {
+        "name": "Volunteer",
+        "description": "Delivery Volunteer"
+      },
+      {
+        "name": "Admin",
+        "description": "System Administrator"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "foodshare-web",
+      "enabled": true,
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "rootUrl": "http://localhost:5173",
+      "adminUrl": "http://localhost:5173",
+      "redirectUris": [
+        "http://localhost:5173/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5173"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin_user",
+      "enabled": true,
+      "email": "admin@foodshare.local",
+      "firstName": "Admin",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "Admin"
+      ]
+    }
+  ]
+}

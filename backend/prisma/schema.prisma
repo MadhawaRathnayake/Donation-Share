@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  Donor
+  Recipient
+  Volunteer
+  Admin
+}
+
+enum ApprovalStatus {
+  Pending
+  Approved
+  Rejected
+}
+
+enum DonationStatus {
+  Posted
+  Claimed
+  Assigned
+  PickedUp
+  Delivered
+  Cancelled
+  Expired
+}
+
+enum DeliveryStatus {
+  Assigned
+  PickedUp
+  Delivered
+}
+
+enum Channel {
+  InApp
+  Email
+}
+
+model User {
+  id                 String         @id @default(uuid())
+  keycloakId         String         @unique
+  name               String
+  email              String         @unique
+  role               Role
+  verificationStatus ApprovalStatus @default(Pending)
+  createdAt          DateTime       @default(now())
+
+  donorProfile     DonorProfile?
+  recipientProfile RecipientProfile?
+
+  notifications     Notification[]
+  pickupAssignments PickupAssignment[]
+}
+
+model DonorProfile {
+  id               String  @id @default(uuid())
+  organizationName String
+  address          String
+  contactPerson    String
+  verified         Boolean @default(false)
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique
+
+  donations FoodDonation[]
+}
+
+model RecipientProfile {
+  id             String         @id @default(uuid())
+  orgName        String
+  serviceArea    String
+  approvalStatus ApprovalStatus @default(Pending)
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique
+
+  claims Claim[]
+}
+
+model FoodDonation {
+  id                String         @id @default(uuid())
+  foodType          String
+  quantity          Int
+  pickupLocation    String
+  pickupWindowStart DateTime
+  expiryTime        DateTime
+  notes             String?
+  imageUrl          String?
+  status            DonationStatus @default(Posted)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  donor   DonorProfile @relation(fields: [donorId], references: [id], onDelete: Cascade)
+  donorId String
+
+  claim            Claim?
+  pickupAssignment PickupAssignment?
+  notifications    Notification[]
+}
+
+model Claim {
+  id             String         @id @default(uuid())
+  claimTime      DateTime       @default(now())
+  approvalStatus ApprovalStatus @default(Pending)
+
+  donation   FoodDonation @relation(fields: [donationId], references: [id], onDelete: Cascade)
+  donationId String       @unique
+
+  recipient   RecipientProfile @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  recipientId String
+}
+
+model PickupAssignment {
+  id             String         @id @default(uuid())
+  pickupTime     DateTime?
+  deliveryTime   DateTime?
+  deliveryStatus DeliveryStatus @default(Assigned)
+
+  donation   FoodDonation @relation(fields: [donationId], references: [id], onDelete: Cascade)
+  donationId String       @unique
+
+  volunteer   User   @relation(fields: [volunteerId], references: [id], onDelete: Cascade)
+  volunteerId String
+}
+
+model Notification {
+  id         String   @id @default(uuid())
+  eventType  String
+  message    String
+  channel    Channel  @default(InApp)
+  sentAt     DateTime @default(now())
+  readStatus Boolean  @default(false)
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  donation   FoodDonation? @relation(fields: [donationId], references: [id], onDelete: SetNull)
+  donationId String?
+}
