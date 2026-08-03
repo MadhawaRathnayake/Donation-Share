@@ -1,3 +1,15 @@
+// FoodShare data model.
+//
+// Ownership note (see TEAM_WORK_BREAKDOWN.md):
+//   Member 3 owns User, DonorProfile, RecipientProfile, VolunteerProfile and FoodDonation.
+//   Member 4 owns Claim. Member 5 owns PickupAssignment and Notification.
+//
+// Columns added by Member 3 are deliberately optional at the database level so that
+// `prisma db push` stays non-destructive for teammates who already have local data.
+// Requiredness for those fields is enforced at the API boundary with Zod
+// (see src/modules/user/user.schema.ts), which is also where the field-level error
+// messages the frontend renders come from.
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -45,12 +57,14 @@ model User {
   keycloakId         String         @unique
   name               String
   email              String         @unique
+  phone              String?
   role               Role
   verificationStatus ApprovalStatus @default(Pending)
   createdAt          DateTime       @default(now())
 
   donorProfile     DonorProfile?
   recipientProfile RecipientProfile?
+  volunteerProfile VolunteerProfile?
 
   notifications     Notification[]
   pickupAssignments PickupAssignment[]
@@ -61,6 +75,10 @@ model DonorProfile {
   organizationName String
   address          String
   contactPerson    String
+  taxId            String?
+  operatingHours   String?
+  latitude         Float?
+  longitude        Float?
   verified         Boolean @default(false)
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -73,12 +91,33 @@ model RecipientProfile {
   id             String         @id @default(uuid())
   orgName        String
   serviceArea    String
+  address        String?
+  contactPerson  String?
+  taxId          String?
+  operatingHours String?
+  latitude       Float?
+  longitude      Float?
   approvalStatus ApprovalStatus @default(Pending)
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String @unique
 
   claims Claim[]
+}
+
+// Added by Member 3. The architecture report models Donor and Recipient profiles only,
+// but the Volunteer onboarding flow built by Member 2 submits full-name and availability
+// details that have nowhere else to live. Documented in docs/MEMBER_3_WORKLOG.md.
+model VolunteerProfile {
+  id           String  @id @default(uuid())
+  fullName     String
+  availability String
+  address      String?
+  latitude     Float?
+  longitude    Float?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique
 }
 
 model FoodDonation {
@@ -100,6 +139,11 @@ model FoodDonation {
   claim            Claim?
   pickupAssignment PickupAssignment?
   notifications    Notification[]
+
+  // Supports the donor history query (Member 3) and the public browse/filter
+  // query (Member 4) without a sequential scan once the table grows.
+  @@index([donorId, createdAt])
+  @@index([status, expiryTime])
 }
 
 model Claim {

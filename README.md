@@ -25,17 +25,43 @@ We use Docker to run PostgreSQL (Database), RabbitMQ (Event Broker), and Keycloa
    ```
 *(Note: On the very first run, Keycloak will automatically import the FoodShare realm from `keycloak/realm-export.json`.)*
 
-### Step 2: Set Up the Database Schema
-Before running the backend API, you must push the Prisma schema to the PostgreSQL database so the tables exist.
+### Step 2: Configure and Set Up the Database
+Before running the backend API, create its environment file and push the Prisma schema to PostgreSQL so the tables exist.
 
 1. Open a new terminal and navigate to the backend directory:
    ```bash
    cd FoodShare/backend
    ```
-2. Push the schema to the database:
+2. Create your local environment file from the documented template:
    ```bash
+   cp .env.example .env
+   ```
+   The defaults match the `docker-compose.yml` services, so no edit is needed for local development. `.env` is gitignored — never commit it.
+3. Install dependencies and generate the Prisma client:
+   ```bash
+   npm ci
+   npm approve-scripts esbuild
+   npm approve-scripts prisma
+   npm approve-scripts @prisma/engines
+   npx prisma generate
+   ```
+   Newer versions of npm block package install scripts by default. Prisma's
+   install script is what generates the database client, so without approving it
+   `npm run dev` fails with `Cannot find module '.prisma/client/default'`.
+4. Create the application's database schema, then push the tables into it:
+   ```bash
+   docker exec foodshare-db psql -U foodshare -d foodshare_db -c "CREATE SCHEMA IF NOT EXISTS foodshare;"
    npx prisma db push
    ```
+   The application deliberately uses its own `foodshare` schema rather than
+   `public`, because Keycloak stores its tables in the same database. If both
+   share `public`, `prisma db push` reports that it is about to delete 31
+   Keycloak tables — accepting that warning destroys the realm, its users and
+   its roles.
+
+   If you ever see a data-loss warning naming tables such as
+   `authentication_flow` or `keycloak_role`, answer **no** and check this
+   setting.
 
 ### Step 3: Start the Backend API
 The backend is a Node.js Express server.
