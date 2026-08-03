@@ -57,16 +57,26 @@ This branch contains the complete Member 2 frontend contribution for FoodShare:
 
 The frontend can run independently while these services are unavailable by enabling the mock API and mock authentication settings described below.
 
-## Run the frontend
+## Setup
+
+### 1. Install frontend dependencies
 
 ```powershell
 cd frontend
 npm ci
-Copy-Item .env.example .env.local
-npm run dev
 ```
 
-To work without the unfinished backend, set these values in `.env.local`:
+### 2. Create the local environment file
+
+```powershell
+Copy-Item .env.example .env.local
+```
+
+The example file contains the default local API and Keycloak addresses. Do not commit `.env.local` or place secrets in any `VITE_` variable because Vite exposes those values to the browser.
+
+### 3. Choose a development mode
+
+For frontend-only development, enable the mock services in `.env.local`:
 
 ```env
 VITE_USE_MOCK_API=true
@@ -74,7 +84,41 @@ VITE_USE_MOCK_AUTH=true
 VITE_MOCK_ROLE=Donor
 ```
 
-Mock role values are `Donor`, `Recipient`, `Volunteer`, and `Admin`. Production builds always use the real API and Keycloak.
+Valid mock roles are `Donor`, `Recipient`, `Volunteer`, and `Admin`. Change `VITE_MOCK_ROLE` before starting the application to review a different workspace.
+
+For integrated development, use:
+
+```env
+VITE_USE_MOCK_API=false
+VITE_USE_MOCK_AUTH=false
+```
+
+Then start PostgreSQL, RabbitMQ, and Keycloak from the repository root:
+
+```powershell
+docker compose up -d
+```
+
+The real backend profile, donation, claim, notification, pickup, and Admin endpoints must be available for their corresponding screens to work.
+
+### 4. Start the frontend
+
+```powershell
+cd frontend
+npm run dev
+```
+
+Open `http://localhost:5173` in a browser.
+
+### 5. Install the end-to-end browser
+
+This is required once before running the Playwright suite:
+
+```powershell
+npx playwright install chromium
+```
+
+Production builds always ignore mock mode and use the real API and Keycloak configuration.
 
 ## Verification
 
