@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 
 import donationRoutes from './modules/donation/donation.routes';
+import notificationRoutes from './modules/notification/notification.routes';
+import pickupRoutes from './modules/pickup/pickup.routes';
 import { connectRabbitMQ } from './lib/rabbitmq';
 
 dotenv.config();
@@ -18,6 +20,8 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/api/donations', donationRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/pickups', pickupRoutes);
 
 app.listen(port, async () => {
   console.log(`FoodShare API is running at http://localhost:${port}`);

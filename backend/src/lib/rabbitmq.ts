@@ -1,7 +1,7 @@
 import amqp from 'amqplib';
 
-let connection: amqp.Connection | null = null;
-let channel: amqp.Channel | null = null;
+let connection: any = null;
+let channel: any = null;
 
 export const connectRabbitMQ = async () => {
   try {

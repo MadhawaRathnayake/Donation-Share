@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const pickup_controller_1 = require("./pickup.controller");
+const auth_middleware_1 = require("../../middleware/auth.middleware");
+const router = (0, express_1.Router)();
+router.use(auth_middleware_1.authenticate);
+router.get('/available', pickup_controller_1.getAvailablePickups);
+router.get('/active', pickup_controller_1.getActivePickup);
+router.post('/accept', pickup_controller_1.acceptPickup);
+router.put('/:id/status', pickup_controller_1.updatePickupStatus);
+exports.default = router;
