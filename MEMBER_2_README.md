@@ -18,6 +18,45 @@ This branch contains the complete Member 2 frontend contribution for FoodShare:
 - Typed HTTP service contracts and development-only mock services.
 - Responsive navigation, notifications, accessibility states, and a professional food-rescue color system.
 
+## Requirements used
+
+### Development environment
+
+- Node.js 20 or newer.
+- npm for dependency installation and project scripts.
+- A modern Chromium, Firefox, or WebKit-based browser.
+- Docker Desktop and Docker Compose when testing with the integrated backend services.
+
+### Frontend technologies
+
+| Requirement | Usage |
+|---|---|
+| React 19 and React DOM | Component-based single-page application. |
+| TypeScript | Strict typing for components, forms, services, and domain models. |
+| Vite | Development server and optimized production build. |
+| Tailwind CSS | Responsive layout and the shared design-token system. |
+| React Router | Protected, role-aware application routing. |
+| Keycloak JS | Authentication, token refresh, logout, and account management. |
+| TanStack Query | API caching, loading states, mutations, and automatic refresh. |
+| Axios | Authenticated HTTP requests to the backend API. |
+| React Hook Form and Zod | Role-specific forms and client-side validation. |
+| Lucide React | Accessible interface icons. |
+
+### Testing and quality tools
+
+- Oxlint for static analysis.
+- Vitest and React Testing Library for unit and integration testing.
+- MSW for typed HTTP-contract tests.
+- Playwright for desktop and mobile end-to-end testing.
+
+### Integrated services
+
+- Keycloak at `http://localhost:8080`.
+- FoodShare backend API at `http://localhost:3000/api`.
+- PostgreSQL and RabbitMQ through the repository Docker Compose configuration.
+
+The frontend can run independently while these services are unavailable by enabling the mock API and mock authentication settings described below.
+
 ## Run the frontend
 
 ```powershell
