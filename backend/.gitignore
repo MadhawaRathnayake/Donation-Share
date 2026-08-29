@@ -1,5 +1,13 @@
 node_modules
+
 # Keep environment variables out of version control
 .env
 
 /src/generated/prisma
+
+# Compiled output
+dist
+
+# Locally uploaded donation photos. These are runtime data, not source.
+# Member 1 replaces this with object storage (S3 / Azure Blob) for deployment.
+uploads/
