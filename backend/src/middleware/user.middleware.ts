@@ -23,7 +23,7 @@ export const attachDbUser = async (req: Request, _res: Response, next: NextFunct
     return;
   }
 
-  const user = await prisma.user.findUnique({
+  let user = await prisma.user.findUnique({
     where: { keycloakId: req.auth.keycloakId },
     select: {
       id: true,
@@ -35,6 +35,30 @@ export const attachDbUser = async (req: Request, _res: Response, next: NextFunct
       verificationStatus: true,
     },
   });
+
+  // Auto-provision an account for Keycloak Admins if one doesn't exist.
+  // Admins do not go through the frontend onboarding flow.
+  if (!user && req.auth.roles.includes('Admin')) {
+    user = await prisma.user.create({
+      data: {
+        keycloakId: req.auth.keycloakId,
+        name: req.auth.name,
+        email: req.auth.email,
+        phone: 'N/A',
+        role: 'Admin',
+        verificationStatus: 'Approved',
+      },
+      select: {
+        id: true,
+        keycloakId: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        verificationStatus: true,
+      },
+    });
+  }
 
   req.dbUser = (user as AccountUser | null) ?? null;
   next();

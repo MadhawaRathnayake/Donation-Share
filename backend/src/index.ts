@@ -6,6 +6,10 @@ import { connectRabbitMQ, closeRabbitMQ, isRabbitConnected } from './lib/rabbitm
 import { ensureUploadDir, uploadDir } from './lib/upload';
 import userRoutes from './modules/user/user.routes';
 import donationRoutes from './modules/donation/donation.routes';
+import adminRoutes from './modules/admin/admin.routes';
+import claimRoutes from './modules/claim/claim.routes';
+import pickupRoutes from './modules/pickup/pickup.routes';
+import notificationRoutes from './modules/notification/notification.routes';
 
 // Registers the Express Request augmentation (req.auth, req.dbUser).
 import './types/auth';
@@ -38,6 +42,10 @@ app.get('/health', (_req, res) => {
 
 app.use('/api/users', userRoutes);
 app.use('/api/donations', donationRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/claims', claimRoutes);
+app.use('/api/pickups', pickupRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Registered last: unmatched routes, then the single error formatter.
 app.use(notFoundHandler);

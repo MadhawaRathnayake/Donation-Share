@@ -159,8 +159,43 @@ export const cancelDonation = async (userId: string, donationId: string): Promis
  * dashboard has a working endpoint in the meantime; the response envelope will
  * not change when the filters are added.
  */
-export const listAvailableDonations = async (page: PageRequest): Promise<Paginated<DonationResponse>> => {
-  const where = { status: DonationStatus.Posted, expiryTime: { gt: new Date() } };
+export const listAvailableDonations = async (
+  page: PageRequest,
+  type?: string,
+  maxDistance?: number,
+  recipientCoords?: { lat: number; lon: number },
+  expiringSoon?: boolean,
+): Promise<Paginated<DonationResponse>> => {
+  const where: import('@prisma/client').Prisma.FoodDonationWhereInput = { 
+    status: DonationStatus.Posted, 
+    expiryTime: { gt: new Date() } 
+  };
+
+  if (type) {
+    where.foodType = { contains: type, mode: 'insensitive' };
+  }
+
+  if (expiringSoon) {
+    const tomorrow = new Date();
+    tomorrow.setHours(tomorrow.getHours() + 24);
+    where.expiryTime = { gt: new Date(), lte: tomorrow };
+  }
+
+  if (maxDistance && recipientCoords) {
+    const latOffset = maxDistance / 111;
+    const lonOffset = maxDistance / (111 * Math.cos(recipientCoords.lat * (Math.PI / 180)));
+
+    where.donor = {
+      latitude: {
+        gte: recipientCoords.lat - latOffset,
+        lte: recipientCoords.lat + latOffset,
+      },
+      longitude: {
+        gte: recipientCoords.lon - lonOffset,
+        lte: recipientCoords.lon + lonOffset,
+      }
+    };
+  }
 
   const [rows, total] = await prisma.$transaction([
     prisma.foodDonation.findMany({
