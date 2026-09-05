@@ -3,6 +3,7 @@
   "realm": "foodshare",
   "displayName": "FoodShare Platform",
   "enabled": true,
+  "registrationAllowed": true,
   "roles": {
     "realm": [
       {

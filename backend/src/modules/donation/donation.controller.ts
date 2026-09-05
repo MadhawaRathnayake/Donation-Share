@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import prisma from '../../lib/prisma';
 import { parsePageRequest } from '../../lib/pagination';
 import { removeUploadedFile } from '../../lib/upload';
 import {
@@ -42,5 +43,27 @@ export const putCancelDonation = async (req: Request, res: Response) => {
 
 /** Public feed. Member 4 extends this with filters (Task 4.1.1). */
 export const getDonations = async (req: Request, res: Response) => {
-  res.json(await listAvailableDonations(parsePageRequest(req.query)));
+  const type = typeof req.query.type === 'string' ? req.query.type : undefined;
+  const maxDistance = req.query.maxDistance ? Number(req.query.maxDistance) : undefined;
+  const expiringSoon = req.query.expiringSoon === 'true';
+
+  let recipientCoords: { lat: number; lon: number } | undefined;
+  
+  if (maxDistance && req.dbUser?.id) {
+    const profile = await prisma.recipientProfile.findUnique({
+      where: { userId: req.dbUser.id },
+      select: { latitude: true, longitude: true },
+    });
+    if (profile?.latitude && profile?.longitude) {
+      recipientCoords = { lat: profile.latitude, lon: profile.longitude };
+    }
+  }
+
+  res.json(await listAvailableDonations(
+    parsePageRequest(req.query),
+    type,
+    maxDistance,
+    recipientCoords,
+    expiringSoon
+  ));
 };
