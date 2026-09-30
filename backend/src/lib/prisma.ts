@@ -1,15 +1,15 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
+import { env } from './env';
 
-const connectionString = process.env.DATABASE_URL || 'postgresql://foodshare:foodshare_password@localhost:5433/foodshare_db?schema=prisma';
-const pool = new Pool({ connectionString });
+// Keycloak owns the `public` schema of the shared database, so the application
+// lives in the schema named by DATABASE_URL (`?schema=foodshare`).
+const schema = new URL(env.databaseUrl).searchParams.get('schema') ?? 'foodshare';
 
-pool.on('connect', (client) => {
-  client.query('SET search_path TO prisma, public');
-});
+const pool = new Pool({ connectionString: env.databaseUrl });
 
-const adapter = new PrismaPg(pool);
+const adapter = new PrismaPg(pool, { schema });
 
 const prisma = new PrismaClient({ adapter });
 

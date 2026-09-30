@@ -4,7 +4,6 @@ import {
   ArrowDown,
   CheckCircle2,
   MapPin,
-  Navigation,
   PackageCheck,
   Truck,
 } from "lucide-react";
@@ -86,17 +85,11 @@ export default function VolunteerDashboard() {
         }
       : activePickup?.status === "PickedUp"
         ? {
-            status: "InTransit" as const,
-            label: "Start delivery",
-            icon: Navigation,
+            status: "Delivered" as const,
+            label: "Confirm delivery",
+            icon: CheckCircle2,
           }
-        : activePickup?.status === "InTransit"
-          ? {
-              status: "Delivered" as const,
-              label: "Confirm delivery",
-              icon: CheckCircle2,
-            }
-          : null;
+        : null;
 
   return (
     <div className="space-y-9">

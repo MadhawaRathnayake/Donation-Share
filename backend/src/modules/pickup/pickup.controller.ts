@@ -46,9 +46,7 @@ export const getAvailablePickups = async (req: Request, res: Response) => {
 
 export const getActivePickup = async (req: Request, res: Response) => {
   try {
-    const keycloakId = (req as any).user.id;
-    const volunteer = await prisma.user.findUnique({ where: { keycloakId } });
-    if (!volunteer) return res.status(404).json({ error: 'Volunteer not found' });
+    const volunteer = req.dbUser!;
 
     const active = await prisma.pickupAssignment.findFirst({
       where: {
@@ -84,9 +82,7 @@ export const getActivePickup = async (req: Request, res: Response) => {
 
 export const acceptPickup = async (req: Request, res: Response) => {
   try {
-    const keycloakId = (req as any).user.id;
-    const volunteer = await prisma.user.findUnique({ where: { keycloakId } });
-    if (!volunteer) return res.status(404).json({ error: 'Volunteer not found' });
+    const volunteer = req.dbUser!;
 
     const donationId = req.body.pickupId as string;
     if (!donationId) return res.status(400).json({ error: 'pickupId is required' });
@@ -153,10 +149,7 @@ export const updatePickupStatus = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid status. Must be PickedUp or Delivered.' });
     }
 
-    const keycloakId = (req as any).user.id;
-    
-    const volunteer = await prisma.user.findUnique({ where: { keycloakId } });
-    if (!volunteer) return res.status(404).json({ error: 'Volunteer not found' });
+    const volunteer = req.dbUser!;
 
     const assignment = await prisma.pickupAssignment.findUnique({
       where: { id },
