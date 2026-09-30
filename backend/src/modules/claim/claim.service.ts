@@ -1,6 +1,5 @@
 import { ApprovalStatus, DonationStatus } from '@prisma/client';
 import prisma from '../../lib/prisma';
-import { env } from '../../lib/env';
 import { AppError, conflict, forbidden, notFound } from '../../lib/errors';
 import { DomainEvent, buildEvent } from '../../lib/events';
 import { publishNotificationEvent } from '../../lib/rabbitmq';
@@ -31,33 +30,31 @@ const requireRecipientProfile = async (userId: string) => {
 export const createClaim = async (userId: string, donationId: string) => {
   const profile = await requireRecipientProfile(userId);
 
-  // Optimistic locking: try to update the donation from Posted to Claimed
-  const result = await prisma.foodDonation.updateMany({
-    where: { id: donationId, status: DonationStatus.Posted },
-    data: { status: DonationStatus.Claimed },
-  });
+  // Lock the donation (Posted -> Claimed) and create the claim atomically, so a
+  // failed claim insert cannot leave the donation stuck as Claimed.
+  const claim = await prisma.$transaction(async (tx) => {
+    const result = await tx.foodDonation.updateMany({
+      where: { id: donationId, status: DonationStatus.Posted },
+      data: { status: DonationStatus.Claimed },
+    });
 
-  if (result.count === 0) {
-    const existing = await prisma.foodDonation.findUnique({ where: { id: donationId } });
-    if (!existing) throw notFound('Donation not found.');
-    throw conflict(
-      'DONATION_NOT_AVAILABLE',
-      `This donation cannot be claimed because it is currently ${existing.status}.`
-    );
-  }
-
-  // Donation is successfully locked and marked as Claimed, now create the Claim record
-  const claim = await prisma.claim.create({
-    data: {
-      donationId,
-      recipientId: profile.id,
-      approvalStatus: profile.approvalStatus,
-    },
-    include: {
-      donation: {
-        include: { donor: true }
-      }
+    if (result.count === 0) {
+      const existing = await tx.foodDonation.findUnique({ where: { id: donationId } });
+      if (!existing) throw notFound('Donation not found.');
+      throw conflict(
+        'DONATION_NOT_AVAILABLE',
+        `This donation cannot be claimed because it is currently ${existing.status}.`,
+      );
     }
+
+    return tx.claim.create({
+      data: {
+        donationId,
+        recipientId: profile.id,
+        approvalStatus: profile.approvalStatus,
+      },
+      include: { donation: { include: { donor: true } } },
+    });
   });
 
   const donation = claim.donation;

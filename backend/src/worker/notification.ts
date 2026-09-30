@@ -53,18 +53,28 @@ async function processMessage(msg: NotificationMessage) {
 
     // 2. Email
     if (rule.channels.includes('Email')) {
-      await sendEmail(
-        user.email,
-        `FoodShare Update: ${eventType}`,
-        payload.message || `You have a new update for your donation.`
-      );
+      // Delivery channels fail independently: a mail outage must not re-run the
+      // message and create the in-app notification a second time.
+      try {
+        await sendEmail(
+          user.email,
+          `FoodShare Update: ${eventType}`,
+          payload.message || `You have a new update for your donation.`
+        );
+      } catch (error) {
+        console.error(`Email to ${user.email} failed for ${eventType}:`, error instanceof Error ? error.message : error);
+      }
     }
 
     // 3. SMS (assuming user has a phone number, but we don't have it in schema, 
     // so we mock it if it's not available or use a dummy number)
     if (rule.channels.includes('SMS')) {
       const phoneNumber = '+15551234567'; // Fallback dummy number
-      await sendSMS(phoneNumber, payload.message || `FoodShare Alert: ${eventType}`);
+      try {
+        await sendSMS(phoneNumber, payload.message || `FoodShare Alert: ${eventType}`);
+      } catch (error) {
+        console.error(`SMS failed for ${eventType}:`, error instanceof Error ? error.message : error);
+      }
     }
   }
 }
