@@ -37,7 +37,7 @@ export const httpServices: FoodShareServices = {
     updateStatus: async (id, status) => (await api.put(`/pickups/${id}/status`, { status })).data,
   },
   notifications: {
-    list: async () => (await api.get('/notifications')).data,
+    list: async () => (await api.get('/notifications')).data.notifications,
     markRead: async (id) => { await api.put(`/notifications/${id}/read`); },
     markAllRead: async () => { await api.put('/notifications/read-all'); },
   },

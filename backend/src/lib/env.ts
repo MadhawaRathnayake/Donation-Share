@@ -30,7 +30,7 @@ export const env = {
 
   databaseUrl:
     process.env.DATABASE_URL ??
-    'postgresql://foodshare:foodshare_password@localhost:5432/foodshare_db?schema=public',
+    'postgresql://foodshare:foodshare_password@localhost:5434/foodshare_db?schema=foodshare',
 
   keycloak: {
     baseUrl: trimSlash(process.env.KEYCLOAK_URL ?? 'http://localhost:8080'),

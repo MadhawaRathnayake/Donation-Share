@@ -34,4 +34,8 @@ export const toApiError = (error: unknown): ApiError => {
   return { code: 'UNKNOWN', message: 'Something went wrong. Please try again.' };
 };
 
+// Pages read `error.message` / `error.fieldErrors`, so surface the server's
+// structured error instead of axios' generic "Request failed with status code N".
+api.interceptors.response.use((response) => response, (error) => Promise.reject(toApiError(error)));
+
 export default api;
